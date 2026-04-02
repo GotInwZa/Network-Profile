@@ -1,1 +1,1692 @@
-testsss
+อธิบาย config ต่างๆ เกี่ยวกับ lab ที่ทำ
+
+คำนิยาม
+ser  =  serial
+gi   =  gigabitEthernet
+
+Lab 7 Enterprise Network (Full Stack Infrastructure)
+ip and gateway
+
+Internet ip
+ser 0/1/0   11.11.11.1/29
+ser 0/1/1   11.11.11.9/29
+
+main-isp ip
+ser 0/1/0   11.11.11.6/29
+gi 0/0/0    172.16.0.253/24
+gi 0/0/1    172.16.1.253/24
+
+backup-isp ip
+ser 0/1/1   11.11.11.14
+gi 0/0/0    172.16.0.252/24
+gi 0/0/1    172.16.1.252/24
+
+Core-SW1 ip
+vlan 1   internet1 172.16.0.251/24
+vlan 2   internet2 172.16.1.251/24
+vlan 8   server    192.168.8.13/28
+vlan 10  it        192.168.10.253/24
+vlan 20  staff     192.168.20.253/24
+vlan 99  guest     192.168.99.253/24
+
+Core-sw2 ip
+vlan 1   internet1 172.16.0.250/24
+vlan 2   internet2 172.16.1.250/24
+vlan 8   server    192.168.8.12/28
+vlan 10  it        192.168.10.252/24
+vlan 20  staff     192.168.20.252/24
+vlan 99  guest     192.168.99.252/24
+
+HSRP ip
+standby 1  172.16.0.254 (internet1)
+standby 2  172.16.1.254 (internet2)
+standby 8  192.168.8.14
+standby 10 192.168.10.254
+standby 20 192.168.20.254
+standby 99 192.168.99.254
+
+dhcp server ip 192.168.8.1/28
+aaa server ip 192.168.8.2/28
+wireless-lan-controller ip 192.168.10.100/24
+dns-server ip 8.8.8.8
+www.google.com ip 8.8.8.8
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config internet
+Internet#show running-config 
+Building configuration...
+
+Current configuration : 928 bytes
+!
+version 15.4
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Internet
+!
+!
+!
+!
+!
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0/0
+ ip address 8.255.255.254 255.0.0.0
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/0/1
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface GigabitEthernet0/0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Serial0/1/0
+ ip address 11.11.11.1 255.255.255.248
+!
+interface Serial0/1/1
+ ip address 11.11.11.9 255.255.255.248
+!
+interface Serial0/2/0
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Serial0/2/1
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config main-isp-r1
+Main-ISP-R1#show running-config 
+Building configuration...
+
+Current configuration : 1675 bytes
+!
+version 15.4
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Main-ISP-R1
+!
+!
+!
+!
+!
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 2.2.2.2 255.255.255.255
+!
+interface GigabitEthernet0/0/0
+ ip address 172.16.0.253 255.255.255.0
+ ip nat inside
+ duplex auto
+ speed auto
+ standby version 2
+ standby 1 ip 172.16.0.254
+ standby 1 priority 150
+ standby 1 preempt
+ standby preempt
+!
+interface GigabitEthernet0/0/1
+ ip address 172.16.1.253 255.255.255.0
+ ip nat inside
+ duplex auto
+ speed auto
+ standby version 2
+ standby 2 ip 172.16.1.254
+ standby 2 priority 150
+ standby 2 preempt
+!
+interface GigabitEthernet0/0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Serial0/1/0
+ ip address 11.11.11.6 255.255.255.248
+ ip nat outside
+ clock rate 2000000
+!
+interface Serial0/1/1
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Serial0/2/0
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Serial0/2/1
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 1
+ router-id 2.2.2.2
+ log-adjacency-changes
+ network 172.16.0.0 0.0.0.255 area 0
+ network 172.16.1.0 0.0.0.255 area 0
+!
+ip nat inside source list 1 interface Serial0/1/0 overload
+ip classless
+ip route 0.0.0.0 0.0.0.0 11.11.11.1 
+!
+ip flow-export version 9
+!
+!
+access-list 1 permit 192.168.8.0 0.0.0.15
+access-list 1 permit 192.168.10.0 0.0.0.255
+access-list 1 permit 192.168.20.0 0.0.0.255
+access-list 1 permit 192.168.99.0 0.0.0.255
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config backup-isp-r1
+Backup-ISP-R1#show running-config 
+Building configuration...
+
+Current configuration : 1673 bytes
+!
+version 15.4
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Backup-ISP-R1
+!
+!
+!
+!
+!
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 1.1.1.1 255.255.255.255
+!
+interface GigabitEthernet0/0/0
+ ip address 172.16.0.252 255.255.255.0
+ ip nat inside
+ duplex auto
+ speed auto
+ standby version 2
+ standby 1 ip 172.16.0.254
+ standby 1 priority 99
+ standby 1 preempt
+!
+interface GigabitEthernet0/0/1
+ ip address 172.16.1.252 255.255.255.0
+ ip nat inside
+ duplex auto
+ speed auto
+ standby version 2
+ standby 2 ip 172.16.1.254
+ standby 2 priority 99
+ standby 2 preempt
+!
+interface GigabitEthernet0/0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Serial0/1/0
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Serial0/1/1
+ bandwidth 10
+ ip address 11.11.11.14 255.255.255.248
+ ip nat outside
+ clock rate 2000000
+!
+interface Serial0/2/0
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Serial0/2/1
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 1
+ router-id 1.1.1.1
+ log-adjacency-changes
+ network 172.16.0.0 0.0.0.255 area 0
+ network 172.16.1.0 0.0.0.255 area 0
+!
+ip nat inside source list 1 interface Serial0/1/1 overload
+ip classless
+ip route 0.0.0.0 0.0.0.0 11.11.11.9 
+!
+ip flow-export version 9
+!
+!
+access-list 1 permit 192.168.8.0 0.0.0.15
+access-list 1 permit 192.168.10.0 0.0.0.255
+access-list 1 permit 192.168.20.0 0.0.0.255
+access-list 1 permit 192.168.99.0 0.0.0.255
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config core-sw1
+Core-SW1#show running-config 
+Building configuration...
+
+Current configuration : 5395 bytes
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Core-SW1
+!
+!
+no profinet
+!
+!
+!
+!
+!
+aaa new-model
+!
+aaa authentication login default group radius 
+!
+!
+!
+!
+!
+!
+ip routing
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip dhcp snooping vlan 10,20,99
+ip dhcp snooping
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree vlan 1-2,8,10,20,99 priority 8192
+!
+!
+!
+!
+!
+!
+interface Port-channel1
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 1-2,8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ spanning-tree vlan 1-2,8,10,20,99 port-priority 32
+!
+interface Port-channel2
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Port-channel3
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/1
+ ip dhcp snooping trust
+ ip dhcp snooping limit rate 1000
+ switchport access vlan 8
+ switchport mode access
+ switchport port-security mac-address sticky 
+ switchport port-security violation restrict 
+ switchport port-security aging time 20
+!
+interface FastEthernet0/2
+ switchport access vlan 8
+ switchport mode access
+ switchport port-security mac-address sticky 
+ switchport port-security violation restrict 
+ switchport port-security aging time 20
+!
+interface FastEthernet0/3
+ switchport access vlan 8
+ switchport mode access
+!
+interface FastEthernet0/4
+ switchport access vlan 8
+ switchport mode access
+!
+interface FastEthernet0/5
+ switchport access vlan 8
+ switchport mode access
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/20
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/21
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/22
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/23
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 1-2,8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface FastEthernet0/24
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 1-2,8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/1
+ switchport mode access
+!
+interface GigabitEthernet0/2
+ switchport access vlan 2
+ switchport mode access
+!
+interface Vlan1
+ ip address 172.16.0.251 255.255.255.0
+ standby version 2
+ standby 1 ip 172.16.0.254
+ standby 1 priority 101
+ standby 1 preempt
+!
+interface Vlan2
+ mac-address 0040.0b48.ad01
+ ip address 172.16.1.251 255.255.255.0
+ standby version 2
+ standby 2 ip 172.16.1.254
+ standby 2 priority 101
+ standby 2 preempt
+!
+interface Vlan8
+ mac-address 0040.0b48.ad02
+ ip address 192.168.8.13 255.255.255.240
+ standby version 2
+ standby 8 ip 192.168.8.14
+ standby 8 priority 101
+ standby 8 preempt
+!
+interface Vlan10
+ mac-address 0040.0b48.ad03
+ ip address 192.168.10.253 255.255.255.0
+ ip helper-address 192.168.8.1
+ standby version 2
+ standby 10 ip 192.168.10.254
+ standby 10 priority 101
+ standby 10 preempt
+!
+interface Vlan20
+ mac-address 0040.0b48.ad04
+ ip address 192.168.20.253 255.255.255.0
+ ip helper-address 192.168.8.1
+ standby version 2
+ standby 20 ip 192.168.20.254
+ standby 20 priority 101
+ standby 20 preempt
+!
+interface Vlan99
+ mac-address 0040.0b48.ad05
+ ip address 192.168.99.253 255.255.255.0
+ ip helper-address 192.168.8.1
+ standby version 2
+ standby 99 ip 192.168.99.254
+ standby 99 priority 101
+ standby 99 preempt
+!
+router ospf 1
+ router-id 4.4.4.4
+ log-adjacency-changes
+ network 172.16.0.0 0.0.0.255 area 0
+ network 172.16.1.0 0.0.0.255 area 0
+ network 192.168.8.0 0.0.0.15 area 1
+ network 192.168.10.0 0.0.0.255 area 1
+ network 192.168.20.0 0.0.0.255 area 1
+ network 192.168.99.0 0.0.0.255 area 1
+!
+ip classless
+ip route 0.0.0.0 0.0.0.0 172.16.0.254 
+ip route 0.0.0.0 0.0.0.0 172.16.1.254 
+!
+ip flow-export version 9
+!
+!
+ip access-list extended staff
+ deny ip 192.168.99.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255
+ deny ip 192.168.99.0 0.0.0.255 192.168.8.0 0.0.0.15
+ permit ip any any
+!
+!
+radius-server host 192.168.8.2 auth-port 1645 key password
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+!
+!
+!
+!
+end
+
+==========================================================================================================================================================================================
+
+Core-SW1#show spanning-tree active 
+VLAN0001
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8193
+             Address     0040.0B48.ADD1
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    8193  (priority 8192 sys-id-ext 1)
+             Address     0040.0B48.ADD1
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Desg FWD 12        32.27    P2p
+Gi0/1            Desg FWD 4         128.25   P2p
+
+VLAN0002
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8194
+             Address     0040.0B48.ADD1
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    8194  (priority 8192 sys-id-ext 2)
+             Address     0040.0B48.ADD1
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Desg FWD 12        32.27    P2p
+Gi0/2            Desg FWD 4         128.26   P2p
+
+VLAN0008
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8200
+             Address     0040.0B48.ADD1
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    8200  (priority 8192 sys-id-ext 8)
+             Address     0040.0B48.ADD1
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Desg FWD 12        32.27    P2p
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/1            Desg FWD 19        128.1    P2p
+Po3              Desg FWD 12        128.29   P2p
+Po2              Desg FWD 12        128.28   P2p
+
+VLAN0010
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8202
+             Address     0040.0B48.ADD1
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    8202  (priority 8192 sys-id-ext 10)
+             Address     0040.0B48.ADD1
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Desg FWD 12        32.27    P2p
+Po3              Desg FWD 12        128.29   P2p
+Po2              Desg FWD 12        128.28   P2p
+
+VLAN0020
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8212
+             Address     0040.0B48.ADD1
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    8212  (priority 8192 sys-id-ext 20)
+             Address     0040.0B48.ADD1
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Desg FWD 12        32.27    P2p
+Po3              Desg FWD 12        128.29   P2p
+Po2              Desg FWD 12        128.28   P2p
+
+VLAN0099
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8291
+             Address     0040.0B48.ADD1
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    8291  (priority 8192 sys-id-ext 99)
+             Address     0040.0B48.ADD1
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Desg FWD 12        32.27    P2p
+Po3              Desg FWD 12        128.29   P2p
+Po2              Desg FWD 12        128.28   P2p
+
+VLAN0999
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    33767
+             Address     0001.63E4.6DD1
+             Cost        12
+             Port        29(Port-channel3)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    33767  (priority 32768 sys-id-ext 999)
+             Address     0040.0B48.ADD1
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Altn BLK 12        128.27   P2p
+Po3              Altn BLK 12        128.29   P2p
+Fa0/20           Desg BLK 19        128.20   P2p
+Fa0/22           Desg BLK 19        128.22   P2p
+Fa0/19           Desg BLK 19        128.19   P2p
+Fa0/21           Desg BLK 19        128.21   P2p
+Fa0/24           Desg BLK 19        128.24   P2p
+Fa0/23           Desg BLK 19        128.23   P2p
+Po2              Desg FWD 12        128.28   P2p
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config core-sw2
+Core-SW2#show running-config 
+Building configuration...
+
+Current configuration : 5119 bytes
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Core-SW2
+!
+!
+no profinet
+!
+!
+!
+!
+!
+aaa new-model
+!
+aaa authentication login default group radius 
+!
+!
+!
+!
+!
+!
+ip routing
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip dhcp snooping vlan 10,20,99
+ip dhcp snooping
+!
+!
+!
+spanning-tree mode rapid-pvst
+!
+!
+!
+!
+!
+!
+interface Port-channel1
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 1-2,8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ spanning-tree vlan 1-2,8,10,20,99 port-priority 32
+!
+interface Port-channel2
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Port-channel3
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ spanning-tree vlan 8,10,20,99 port-priority 144
+!
+interface Port-channel4
+ switchport access vlan 10
+ switchport mode access
+!
+interface Port-channel6
+ switchport port-security mac-address sticky 
+ switchport port-security violation restrict 
+ switchport port-security aging time 20
+!
+interface FastEthernet0/1
+!
+interface FastEthernet0/2
+!
+interface FastEthernet0/3
+!
+interface FastEthernet0/4
+!
+interface FastEthernet0/5
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+ switchport access vlan 10
+ switchport mode access
+ channel-protocol lacp
+ channel-group 4 mode active
+!
+interface FastEthernet0/18
+ switchport access vlan 10
+ switchport mode access
+ channel-protocol lacp
+ channel-group 4 mode active
+!
+interface FastEthernet0/19
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/20
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/21
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/22
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/23
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 1-2,8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface FastEthernet0/24
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 1-2,8,10,20,99
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/1
+ switchport mode access
+!
+interface GigabitEthernet0/2
+ switchport access vlan 2
+ switchport mode access
+!
+interface Vlan1
+ ip address 172.16.0.250 255.255.255.0
+ standby version 2
+ standby 1 ip 172.16.0.254
+ standby 1 preempt
+!
+interface Vlan2
+ mac-address 0001.c77b.4801
+ ip address 172.16.1.250 255.255.255.0
+ standby version 2
+ standby 2 ip 172.16.1.254
+ standby 2 preempt
+!
+interface Vlan8
+ mac-address 0001.c77b.4802
+ ip address 192.168.8.12 255.255.255.240
+ standby version 2
+ standby 8 ip 192.168.8.14
+ standby 8 preempt
+!
+interface Vlan10
+ mac-address 0001.c77b.4803
+ ip address 192.168.10.252 255.255.255.0
+ ip helper-address 192.168.8.1
+ standby version 2
+ standby 10 ip 192.168.10.254
+ standby 10 preempt
+!
+interface Vlan20
+ mac-address 0001.c77b.4804
+ ip address 192.168.20.252 255.255.255.0
+ ip helper-address 192.168.8.1
+ standby version 2
+ standby 20 ip 192.168.20.254
+ standby 20 preempt
+!
+interface Vlan99
+ mac-address 0001.c77b.4805
+ ip address 192.168.99.252 255.255.255.0
+ ip helper-address 192.168.8.1
+ standby version 2
+ standby 99 ip 192.168.99.254
+ standby 99 preempt
+!
+router ospf 1
+ router-id 3.3.3.3
+ log-adjacency-changes
+ network 172.16.0.0 0.0.0.255 area 0
+ network 172.16.1.0 0.0.0.255 area 0
+ network 192.168.8.0 0.0.0.15 area 1
+ network 192.168.10.0 0.0.0.255 area 1
+ network 192.168.20.0 0.0.0.255 area 1
+ network 192.168.99.0 0.0.0.255 area 1
+!
+ip classless
+ip route 0.0.0.0 0.0.0.0 172.16.0.254 
+ip route 0.0.0.0 0.0.0.0 172.16.1.254 
+!
+ip flow-export version 9
+!
+!
+ip access-list extended staff
+ deny ip 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255
+ deny ip 192.168.99.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.99.0 0.0.0.255 192.168.8.0 0.0.0.15
+ permit ip any any
+!
+!
+radius-server host 192.168.8.2 auth-port 1645 key password2
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+!
+!
+!
+!
+end 
+
+==========================================================================================================================================================================================
+
+Core-SW2#show spanning-tree active 
+VLAN0001
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8193
+             Address     0040.0B48.ADD1
+             Cost        12
+             Port        27(Port-channel1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0001.C77B.48DA
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Gi0/1            Desg FWD 4         128.25   P2p
+Po1              Root FWD 12        32.27    P2p
+
+VLAN0002
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8194
+             Address     0040.0B48.ADD1
+             Cost        12
+             Port        27(Port-channel1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32770  (priority 32768 sys-id-ext 2)
+             Address     0001.C77B.48DA
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Gi0/2            Desg FWD 4         128.26   P2p
+Po1              Root FWD 12        32.27    P2p
+
+VLAN0008
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8200
+             Address     0040.0B48.ADD1
+             Cost        12
+             Port        27(Port-channel1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32776  (priority 32768 sys-id-ext 8)
+             Address     0001.C77B.48DA
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Root FWD 12        32.27    P2p
+Po2              Altn BLK 12        128.28   P2p
+Po3              Desg FWD 12        144.29   P2p
+
+VLAN0010
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8202
+             Address     0040.0B48.ADD1
+             Cost        12
+             Port        27(Port-channel1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)
+             Address     0001.C77B.48DA
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/18           Desg FWD 19        128.18   P2p
+Fa0/17           Desg FWD 19        128.17   P2p
+Po1              Root FWD 12        32.27    P2p
+Po2              Desg FWD 12        128.28   P2p
+Po3              Desg FWD 12        144.29   P2p
+
+VLAN0020
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8212
+             Address     0040.0B48.ADD1
+             Cost        12
+             Port        27(Port-channel1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32788  (priority 32768 sys-id-ext 20)
+             Address     0001.C77B.48DA
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Root FWD 12        32.27    P2p
+Po2              Altn BLK 12        128.28   P2p
+Po3              Desg FWD 12        144.29   P2p
+
+VLAN0099
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    8291
+             Address     0040.0B48.ADD1
+             Cost        12
+             Port        27(Port-channel1)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32867  (priority 32768 sys-id-ext 99)
+             Address     0001.C77B.48DA
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Po1              Root FWD 12        32.27    P2p
+Po2              Desg FWD 12        128.28   P2p
+Po3              Desg FWD 12        144.29   P2p
+
+VLAN0999
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    33767
+             Address     0001.63E4.6DD1
+             Cost        12
+             Port        28(Port-channel2)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    33767  (priority 32768 sys-id-ext 999)
+             Address     0001.C77B.48DA
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/19           Desg BLK 19        128.19   P2p
+Fa0/20           Desg BLK 19        128.20   P2p
+Fa0/22           Desg BLK 19        128.22   P2p
+Fa0/24           Desg BLK 19        128.24   P2p
+Fa0/21           Desg BLK 19        128.21   P2p
+Fa0/23           Desg BLK 19        128.23   P2p
+Po1              Desg FWD 12        128.27   P2p
+Po2              Root FWD 12        128.28   P2p
+Po3              Desg FWD 12        128.29   P2p
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config sw1
+SW1#show running-config 
+Building configuration...
+
+Current configuration : 2604 bytes
+!
+version 15.0
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname SW1
+!
+!
+!
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+interface Port-channel2
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+!
+interface Port-channel3
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ spanning-tree vlan 8,10,20,99 port-priority 144
+!
+interface FastEthernet0/1
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/2
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/3
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/4
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/5
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/6
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/7
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/8
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/9
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/10
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/20
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/21
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/22
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ switchport trunk native vlan 10
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ shutdown
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+!
+!
+!
+line con 0
+!
+line vty 0 4
+ login
+line vty 5 15
+ login
+!
+!
+!
+!
+end
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config sw2
+SW2#show running-config 
+Building configuration...
+
+Current configuration : 2545 bytes
+!
+version 15.0
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname SW2
+!
+!
+!
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+interface Port-channel2
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+!
+interface Port-channel3
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+!
+interface FastEthernet0/1
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/2
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/3
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/4
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/5
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/6
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/7
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/8
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/9
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/10
+ switchport access vlan 10
+ switchport mode access
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/20
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/21
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/22
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ switchport trunk native vlan 10
+ switchport trunk allowed vlan 8,10,20,99
+ switchport mode trunk
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+!
+!
+!
+line con 0
+!
+line vty 0 4
+ login
+line vty 5 15
+ login
+!
+!
+!
+!
+end
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+config wlan controller
+interface 
+guest vlan 99 ip 192.168.99.251
+management vlan 10 ip 192.168.10.100
+staff vlan 20 ip 192.168.20.251
+ssid company-it interface management security wpa2 auth psk use radius authen
+ssid staff interface staff security spa2 auth psk use radius authen
+guest interface guest security wpa2 auth psk no radius authen (ไม่ตั้ง security wlan access controller จะหาเจอ แต่ไม่สามารถแสดงผลให้ client ต่อได้ เฉพาะใน lab)
+
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+==========================================================================================================================================================================================
+
+ทดสอบระบบ ปิด Main-ISP-R1 เพื่อทดสอบว่ายังสามารถออก internet ผ่าน Backup-ISP-R1 ได้หรือไม่
+Main-ISP-R1#show ip interface brief 
+Interface              IP-Address      OK? Method Status                Protocol 
+GigabitEthernet0/0/0   172.16.0.253    YES manual administratively down down 
+GigabitEthernet0/0/1   172.16.1.253    YES manual administratively down down 
+GigabitEthernet0/0/2   unassigned      YES unset  administratively down down 
+Serial0/1/0            11.11.11.6      YES manual administratively down down 
+Serial0/1/1            unassigned      YES unset  administratively down down 
+Serial0/2/0            unassigned      YES unset  administratively down down 
+Serial0/2/1            unassigned      YES unset  administratively down down 
+Loopback0              2.2.2.2         YES manual up                    up 
+Vlan1                  unassigned      YES unset  administratively down down
+
+ping และ tracert ออกไปข้างนอก จาก PC ip 192.168.10.15/24 192.168.10.254
+C:\>ipconfig
+
+FastEthernet0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: 
+   Link-local IPv6 Address.........: FE80::20A:F3FF:FE6C:979B
+   IPv6 Address....................: ::
+   IPv4 Address....................: 192.168.10.15
+   Subnet Mask.....................: 255.255.255.0
+   Default Gateway.................: ::
+                                     192.168.10.254
+
+C:\>ping 8.8.8.8
+
+Pinging 8.8.8.8 with 32 bytes of data:
+
+Reply from 8.8.8.8: bytes=32 time=165ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=134ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=127ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=116ms TTL=125
+
+Ping statistics for 8.8.8.8:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 116ms, Maximum = 165ms, Average = 135ms
+
+C:\>ping www.google.com
+
+Pinging 8.8.8.8 with 32 bytes of data:
+
+Reply from 8.8.8.8: bytes=32 time=134ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=137ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=164ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=145ms TTL=125
+
+Ping statistics for 8.8.8.8:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 134ms, Maximum = 164ms, Average = 145ms
+
+C:\>tracert www.google.com
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      192.168.10.253
+  2   0 ms      24 ms     0 ms      172.16.0.252
+  3   63 ms     54 ms     30 ms     11.11.11.9
+  4   65 ms     60 ms     45 ms     8.8.8.8
+
+Trace complete.
+
+http://www.google.com สามารถเปิด web ผ่าน domain ได้
+http://8.8.8.8 สามารถเปิด web ผ่าน ip web-server ได้
+
+==========================================================================================================================================================================================
+
+ทดสอบ access-list เป้าหมายคือ guest ไม่สามารถ ping หรือส่งข้อมูลเข้าไปยัง server ภายในได้ ออกได้แค่อินเทอร์เน็ตอย่างเดียว แต่ ip internal ทั้งหมด ออกอินเทอร์เน็ตและใช้บริการ server ภายในได้
+โดยจะทดสอบผ่าน PC ip 192.168.99.14/24 192.168.99.254 ที่เป็น guest
+
+Core-SW1#show access-lists 
+Extended IP access list staff
+    10 deny ip 192.168.99.0 0.0.0.255 192.168.20.0 0.0.0.255
+    20 deny ip 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255
+    30 deny ip 192.168.99.0 0.0.0.255 192.168.8.0 0.0.0.15 (4 match(es))
+    40 permit ip any any (7990 match(es))
+Core-SW2#show access-lists 
+Extended IP access list staff
+    10 deny ip 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255
+    20 deny ip 192.168.99.0 0.0.0.255 192.168.20.0 0.0.0.255
+    30 deny ip 192.168.99.0 0.0.0.255 192.168.8.0 0.0.0.15
+    40 permit ip any any (7701 match(es))
+
+C:\>ipconfig
+
+Wireless0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: 
+   Link-local IPv6 Address.........: FE80::203:E4FF:FE7B:343C
+   IPv6 Address....................: ::
+   IPv4 Address....................: 192.168.99.14
+   Subnet Mask.....................: 255.255.255.0
+   Default Gateway.................: ::
+                                     192.168.99.254
+C:\>ping 8.8.8.8
+
+Pinging 8.8.8.8 with 32 bytes of data:
+
+Reply from 8.8.8.8: bytes=32 time=162ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=120ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=117ms TTL=125
+Reply from 8.8.8.8: bytes=32 time=161ms TTL=125
+
+Ping statistics for 8.8.8.8:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 117ms, Maximum = 162ms, Average = 140ms
+C:\>ping 192.168.8.1 
+
+Pinging 192.168.8.1 with 32 bytes of data:
+
+Reply from 192.168.99.253: Destination host unreachable.
+Reply from 192.168.99.253: Destination host unreachable.
+Reply from 192.168.99.253: Destination host unreachable.
+Reply from 192.168.99.253: Destination host unreachable.
+
+Ping statistics for 192.168.8.1:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+
+
+สรุปคือ ออกเน็ตได้ แต่ไม่สามารถเข้าถึง ip ภายในได้นั่นเอง
