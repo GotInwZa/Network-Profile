@@ -1,1 +1,249 @@
+config Switch
+Switch#show running-config 
+Building configuration...
 
+Current configuration : 1633 bytes
+!
+version 15.0
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Switch
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+interface FastEthernet0/1
+ switchport access vlan 15
+ switchport mode access
+!
+interface GigabitEthernet0/1
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport mode trunk
+ spanning-tree vlan 15,100,110,120 port-priority 112
+!
+interface GigabitEthernet0/2
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport mode trunk
+ spanning-tree vlan 130,140 port-priority 112
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan15
+ ip address 192.168.15.11 255.255.255.240
+!
+!
+!
+!
+line con 0
+!
+line vty 0 4
+ login
+line vty 5 15
+ login
+!
+!
+!
+!
+end
+
+=================================
+
+Core-SW1#show running-config 
+Building configuration...
+
+Current configuration : 3386 bytes
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Core-SW1
+!
+!
+no profinet
+!
+!
+!
+!
+!
+ip routing
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip ftp username got
+ip ftp password 1234
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree vlan 15,100,110,120 priority 20480
+spanning-tree vlan 130,140 priority 24576
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/1
+!
+interface FastEthernet0/2
+!
+interface FastEthernet0/3
+!
+interface FastEthernet0/4
+!
+interface FastEthernet0/5
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ spanning-tree vlan 15,100,110,120 port-priority 112
+!
+interface FastEthernet0/20
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ spanning-tree vlan 15,100,110,120 port-priority 112
+!
+interface FastEthernet0/21
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ spanning-tree vlan 15,100,110,120 port-priority 112
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ spanning-tree vlan 15,100,110,120 port-priority 112
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan15
+ mac-address 0060.70e1.a801
+ ip address 192.168.15.13 255.255.255.240
+ standby 15 ip 192.168.15.14
+ standby 15 priority 150
+ standby 15 preempt
+!
+interface Vlan100
+ mac-address 0060.70e1.a802
+ ip address 192.168.100.253 255.255.255.0
+ ip helper-address 192.168.15.1
+ standby 100 ip 192.168.100.254
+ standby 100 priority 150
+ standby 100 preempt
+!
+interface Vlan110
+ mac-address 0060.70e1.a803
+ ip address 192.168.110.253 255.255.255.0
+ ip helper-address 192.168.15.1
+ standby 110 ip 192.168.110.254
+ standby 110 priority 150
+ standby 110 preempt
+!
+interface Vlan120
+ mac-address 0060.70e1.a804
+ ip address 192.168.120.253 255.255.255.0
+ ip helper-address 192.168.15.1
+ standby 120 ip 192.168.120.254
+ standby 120 priority 150
+ standby 120 preempt
+!
+interface Vlan130
+ mac-address 0060.70e1.a805
+ ip address 192.168.130.253 255.255.255.0
+ ip helper-address 192.168.15.1
+ standby 130 ip 192.168.130.254
+ standby 130 preempt
+!
+interface Vlan140
+ mac-address 0060.70e1.a806
+ ip address 192.168.140.253 255.255.255.0
+ ip helper-address 192.168.15.1
+ standby 140 ip 192.168.140.254
+ standby 140 preempt
+!
+router ospf 1
+ router-id 1.1.1.1
+ log-adjacency-changes
+ network 192.168.8.0 0.0.0.15 area 0
+ network 192.168.100.0 0.0.0.255 area 0
+ network 192.168.110.0 0.0.0.255 area 0
+ network 192.168.120.0 0.0.0.255 area 0
+ network 192.168.130.0 0.0.0.255 area 0
+ network 192.168.140.0 0.0.0.255 area 0
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+!
+end
