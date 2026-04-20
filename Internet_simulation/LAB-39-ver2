@@ -1,0 +1,446 @@
+ip and gateway
+HQ 
+gi 0/0/1 ip 192.168.1.253/24
+gi 0/0/0 ip 111.111.111.1/30
+ISP
+gi 0/0/0 ip 111.111.111.2/30
+se 0/1/0 ip 111.111.111.9/30
+static nat ip 112.112.112.0/29
+Internet
+se 0/1/0 ip  111.111.111.10/30
+gi 0/0/0 ip 55.55.55.54/29
+gi 0/0/1 ip 66.66.66.30/29
+Server
+gotinwza.com ip 55.55.55.49/29
+got999.com ip 66.66.66.25/29
+Core-SW
+vlan 1 ip 192.168.1.254/24
+vlan 15 ip 192.168.15.62/26
+vlan 100 ip 192.168.100.254/24
+vlan 110 ip 192.168.110.254/24
+vlan 120 ip 192.168.120.254/24
+vlan 130 ip 192.168.130.254/24
+vlan 140 ip 192.168.140.254/24
+
+config Core-sw
+Core-SW#show running-config 
+Building configuration...
+
+Current configuration : 3424 bytes
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Core-SW
+!
+!
+no profinet
+!
+!
+!
+!
+!
+ip routing
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface Port-channel1
+ switchport trunk allowed vlan 1,8,15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Port-channel2
+ switchport trunk allowed vlan 1,8,15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Port-channel3
+ switchport trunk allowed vlan 1,15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/1
+ switchport access vlan 15
+ switchport mode access
+!
+interface FastEthernet0/2
+!
+interface FastEthernet0/20
+ switchport mode access
+!
+interface FastEthernet0/21
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/22
+ switchport trunk allowed vlan 15,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 3 mode active
+!
+interface FastEthernet0/23
+ switchport trunk allowed vlan 8,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface FastEthernet0/24
+ switchport trunk allowed vlan 8,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active
+!
+interface GigabitEthernet0/1
+ switchport trunk allowed vlan 8,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/2
+ switchport trunk allowed vlan 8,100,110,120,130,140
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 1 mode active
+!
+interface Vlan1
+ ip address 192.168.1.254 255.255.255.0
+!
+interface Vlan15
+ mac-address 0007.ec73.5801
+ ip address 192.168.15.62 255.255.255.192
+!
+interface Vlan100
+ mac-address 0007.ec73.5802
+ ip address 192.168.100.254 255.255.255.0
+ ip helper-address 192.168.15.1
+!
+interface Vlan110
+ mac-address 0007.ec73.5803
+ ip address 192.168.110.254 255.255.255.0
+ ip helper-address 192.168.15.1
+!
+interface Vlan120
+ mac-address 0007.ec73.5804
+ ip address 192.168.120.254 255.255.255.0
+ ip helper-address 192.168.15.1
+!
+interface Vlan130
+ mac-address 0007.ec73.5805
+ ip address 192.168.130.254 255.255.255.0
+ ip helper-address 192.168.15.1
+!
+interface Vlan140
+ mac-address 0007.ec73.5806
+ ip address 192.168.140.254 255.255.255.0
+ ip helper-address 192.168.15.1
+!
+ip classless
+ip route 0.0.0.0 0.0.0.0 192.168.1.253 
+!
+ip flow-export version 9
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+!
+end
+
+config HQ
+HQ#show running-config 
+Building configuration...
+
+Current configuration : 1009 bytes
+!
+version 15.4
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname HQ
+!
+!
+!
+!
+!
+!
+!
+!
+ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0/0
+ ip address 111.111.111.1 255.255.255.252
+ ip nat outside
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/0/1
+ ip address 192.168.1.253 255.255.255.0
+ ip nat inside
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+ip nat inside source list 1 interface GigabitEthernet0/0/0 overload
+ip nat inside source static 192.168.15.1 112.112.112.1 
+ip classless
+ip route 0.0.0.0 0.0.0.0 111.111.111.2 
+ip route 192.168.0.0 255.255.0.0 192.168.1.254 
+!
+ip flow-export version 9
+!
+!
+access-list 1 permit 192.168.100.0 0.0.0.255
+access-list 1 permit 192.168.110.0 0.0.0.255
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
+config ISP
+ISP#show running-config 
+Building configuration...
+
+Current configuration : 1008 bytes
+!
+version 15.4
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname ISP
+!
+!
+!
+!
+!
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0/0
+ ip address 111.111.111.2 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/0/1
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface GigabitEthernet0/0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Serial0/1/0
+ ip address 111.111.111.9 255.255.255.252
+ clock rate 2000000
+!
+interface Serial0/1/1
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 1
+ router-id 2.2.2.2
+ log-adjacency-changes
+ network 111.111.111.8 0.0.0.3 area 1
+ network 111.111.111.0 0.0.0.3 area 1
+!
+ip classless
+ip route 112.112.112.0 255.255.255.248 111.111.111.1 
+!
+ip flow-export version 9
+!
+!
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
+ทดสอบ HQ ว่า Nat ทำได้จริงหรือไม่
+HQ#show ip nat translations 
+Pro  Inside global     Inside local       Outside local      Outside global
+icmp 111.111.111.1:1024192.168.110.100:1  66.66.66.25:1      66.66.66.25:1024
+icmp 111.111.111.1:1   192.168.110.101:1  55.55.55.49:1      55.55.55.49:1
+icmp 112.112.112.1:14  192.168.15.1:14    55.55.55.49:14     55.55.55.49:14
+icmp 112.112.112.1:15  192.168.15.1:15    55.55.55.49:15     55.55.55.49:15
+icmp 112.112.112.1:16  192.168.15.1:16    55.55.55.49:16     55.55.55.49:16
+icmp 112.112.112.1:17  192.168.15.1:17    66.66.66.25:17     66.66.66.25:17
+icmp 112.112.112.1:18  192.168.15.1:18    66.66.66.25:18     66.66.66.25:18
+---  112.112.112.1     192.168.15.1       ---                ---
+
+ทดสอบว่า Staic Nat IP 112.112.112.1 สามารถเข้าได้ผ่าน Internet หรือไม่
+C:\>ipconfig
+
+FastEthernet0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: 
+   Link-local IPv6 Address.........: FE80::2D0:58FF:FE99:90D5
+   IPv6 Address....................: ::
+   IPv4 Address....................: 55.55.55.49
+   Subnet Mask.....................: 255.255.255.248
+   Default Gateway.................: ::
+                                     55.55.55.54
+
+C:\>ping 112.112.112.1
+
+Pinging 112.112.112.1 with 32 bytes of data:
+
+Reply from 112.112.112.1: bytes=32 time=29ms TTL=124
+Reply from 112.112.112.1: bytes=32 time=29ms TTL=124
+Reply from 112.112.112.1: bytes=32 time=10ms TTL=124
+Reply from 112.112.112.1: bytes=32 time=2ms TTL=124
+
+Ping statistics for 112.112.112.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 2ms, Maximum = 29ms, Average = 17ms
+
+ทดสอบว่า VLAN ที่นอกเหนือจาก VLAN 100 , 110 สามารถออกสู่ internet ได้หรือไม่
+PC ที่อยู่ VLAN 130
+C:\>ipconfig
+
+FastEthernet0 Connection:(default port)
+
+   Connection-specific DNS Suffix..: 
+   Link-local IPv6 Address.........: FE80::290:21FF:FECA:50A4
+   IPv6 Address....................: ::
+   IPv4 Address....................: 192.168.130.100
+   Subnet Mask.....................: 255.255.255.0
+   Default Gateway.................: ::
+                                     192.168.130.254
+
+C:\>ping 55.55.55.49
+
+Pinging 55.55.55.49 with 32 bytes of data:
+
+Request timed out.
+Request timed out.
+Request timed out.
+Request timed out.
+
+Ping statistics for 55.55.55.49:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
